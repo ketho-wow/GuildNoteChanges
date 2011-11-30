@@ -1,5 +1,5 @@
-## Interface: 40200
-## Version: v0.2
+## Interface: 40300
+## Version: 0.3
 ## Title: GuildNoteChanges
 ## Notes: Shows when a Guild Note changes
 ## Author: Ketho @ EU-Boulderfist
