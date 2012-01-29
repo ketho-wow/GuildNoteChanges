@@ -1,1 +1,123 @@
----------------------------------------------- Author: Ketho (EU-Boulderfist)		------ License: Public Domain				------ Created: 2011.09.20					------ Version: 0.4 [2012.01.18]			------------------------------------------------- Curse			http://www.curse.com/addons/wow/guildnotechanges--- WoWInterface	http://www.wowinterface.com/downloads/info20322-GuildNoteChanges.htmllocal NAME = ...local VERSION = 0.4local format = formatlocal GetGuildRosterInfo = GetGuildRosterInfolocal db, viewOfficer	---------------	--- Caching ---	---------------local cache = {}local function GetClassColor(class)	if cache[class] then		return cache[class]	else		local color = RAID_CLASS_COLORS[class]		cache[class] = format("%02X%02X%02X", color.r*255, color.g*255, color.b*255)		return cache[class]	endend	-------------	--- Frame ---	-------------local delay, cd = 0, 0local noop = function() endlocal f = CreateFrame("Frame")-- delay initialization, because some guild API does not yet-- return the correct information (even after ADDON_LOADED)function f.OnUpdate(self, elapsed)	delay = delay + elapsed	if delay > 5 then		if IsInGuild() then			local realm = GetRealmName()			local guild = GetGuildInfo("player")			GuildNoteChangesDB[realm] = GuildNoteChangesDB[realm] or {}			GuildNoteChangesDB[realm][guild] = GuildNoteChangesDB[realm][guild] or {}			db = GuildNoteChangesDB[realm][guild]			viewOfficer = CanViewOfficerNote()			self:RegisterEvent("GUILD_ROSTER_UPDATE")		end		self:SetScript("OnUpdate", noop)	endendfunction f.OnEvent(self, event, ...)	if event == "ADDON_LOADED" and ... == NAME then		GuildNoteChangesDB = GuildNoteChangesDB or {}		GuildNoteChangesDB.version = VERSION		self:UnregisterEvent("ADDON_LOADED")		self:SetScript("OnUpdate", f.OnUpdate)	elseif event == "GUILD_ROSTER_UPDATE" then		if time() > cd then -- throttle			cd = time() + 2			for i = 1, GetNumGuildMembers() do				local name, _, _, _, _, _, publicNote, officerNote, _, _, englishClass = GetGuildRosterInfo(i)				db[name] = db[name] or {}				local classColor = GetClassColor(englishClass)				if db[name][1] and db[name][1] ~= publicNote then					local text					if db[name][1] == "" then						text = publicNote					else						text = format("%s |cff%s->|r %s", db[name][1], classColor, publicNote == "" and "|cffFF0000N/A|r" or publicNote)					end					print(format("|cff%s|Hplayer:%s|h[%s]|h|r %s", classColor, name, name, text))				end				if viewOfficer then					if db[name][2] and db[name][2] ~= officerNote then						local text						if db[name][2] == "" then							text = officerNote						else							text = format("%s |cff%s->|r %s", db[name][2], classColor, officerNote == "" and "|cffFF0000N/A|r" or officerNote)						end						print(format("|cffFF7F00[%s]|r |cff%s|Hplayer:%s|h[%s]|h|r %s", OFFICER_NOTE_COLON, classColor, name, name, text))					end					db[name][2] = officerNote				end				db[name][1] = publicNote			end		end	endendf:RegisterEvent("ADDON_LOADED")f:SetScript("OnEvent", f.OnEvent)
+-------------------------------------------
+--- Author: Ketho (EU-Boulderfist)		---
+--- License: Public Domain				---
+--- Created: 2011.09.20					---
+--- Version: 0.5 [2012.01.29]			---
+-------------------------------------------
+--- Curse			http://www.curse.com/addons/wow/guildnotechanges
+--- WoWInterface	http://www.wowinterface.com/downloads/info20322-GuildNoteChanges.html
+
+local NAME = ...
+local VERSION = 0.5
+
+local db, rank
+local viewOfficer, officerColor
+
+local format = format
+local GetGuildRosterInfo = GetGuildRosterInfo
+
+	---------------
+	--- Caching ---
+	---------------
+
+local cache = setmetatable({}, {__index = function(t, k)
+	local color = CUSTOM_CLASS_COLORS and CUSTOM_CLASS_COLORS[k] or RAID_CLASS_COLORS[k]
+	local v = format("%02X%02X%02X", color.r*255, color.g*255, color.b*255)
+	rawset(t, k, v)
+	return v
+end})
+
+local function RefreshColor()
+	wipe(cache)
+end
+
+	-------------
+	--- Frame ---
+	-------------
+
+local delay, cd = 0, {0, 0}
+local noop = function() end
+
+local f = CreateFrame("Frame")
+
+-- delay initialization, because some guild API does not yet
+-- return the correct information (even after ADDON_LOADED)
+function f:OnUpdate(elapsed)
+	delay = delay + elapsed
+	if delay > 5 then
+		if IsInGuild() then
+			local realm = GetRealmName()
+			local guild = GetGuildInfo("player")
+			GuildNoteChangesDB[realm] = GuildNoteChangesDB[realm] or {}
+			GuildNoteChangesDB[realm][guild] = GuildNoteChangesDB[realm][guild] or {}
+			db = GuildNoteChangesDB[realm][guild]
+			db.rank = db.rank or {}
+			rank = db.rank
+			
+			viewOfficer = CanViewOfficerNote()
+			local officer = ChatTypeInfo.OFFICER
+			officerColor = format("%02X%02X%02X", officer.r*255, officer.g*255, officer.b*255)
+			
+			if CUSTOM_CLASS_COLORS then
+				CUSTOM_CLASS_COLORS:RegisterCallback(RefreshColor)
+			end
+			
+			self:RegisterEvent("GUILD_ROSTER_UPDATE")
+			self:RegisterEvent("GUILD_RANKS_UPDATE")
+		end
+		self:SetScript("OnUpdate", noop)
+	end
+end
+
+function f:ADDON_LOADED(...)
+	if ... == NAME then
+		GuildNoteChangesDB = GuildNoteChangesDB or {}
+		GuildNoteChangesDB.version = VERSION
+		self:UnregisterEvent("ADDON_LOADED")
+		self:SetScript("OnUpdate", f.OnUpdate)
+	end
+end
+
+function f:GUILD_ROSTER_UPDATE()
+	if time() > cd[1] then -- throttle
+		cd[1] = time() + 5
+		for i = 1, GetNumGuildMembers() do
+			local name, _, _, _, _, _, publicNote, officerNote, _, _, class = GetGuildRosterInfo(i)
+			if not name then return end -- sanity check
+			db[name] = db[name] or {}
+			local classColor = cache[class]
+			local publicdb, officerdb = db[name][1], db[name][2]
+			if publicdb and publicdb ~= publicNote then
+				local text = (publicdb == "") and publicNote or format("%s |cff%s->|r %s", publicdb, classColor, (publicNote == "") and "|cffFF0000"..NONE.."|r" or publicNote)
+				print(format("|cff%s|Hplayer:%s|h[%s]|h|r %s", classColor, name, name, text))
+			end
+			if viewOfficer then
+				if officerdb and officerdb ~= officerNote then
+					local text = (officerdb == "") and officerNote or format("%s |cff%s->|r %s", officerdb, classColor,  (officerNote == "") and "|cffFF0000"..NONE.."|r" or officerNote)
+					print(format("|cff"..officerColor.."[%s]|r |cff%s|Hplayer:%s|h[%s]|h|r %s", OFFICER_NOTE_COLON, classColor, name, name, text))
+				end
+				db[name][2] = officerNote
+			end
+			db[name][1] = publicNote
+		end
+	end
+end
+
+function f:GUILD_RANKS_UPDATE()
+	if time() > cd[2] then
+		cd[2] = time() + 60
+		for i = 1, GuildControlGetNumRanks() do
+			local rankdb = rank[i]
+			local rankName = GuildControlGetRankName(i)
+			if rankdb and rankdb ~= rankName then
+				print(format("|cff%s[%s]|r |cff71D5FF#%s|r %s |cff%s->|r %s", officerColor, GUILDCONTROL_GUILDRANKS, i, rankdb, officerColor, rankName))
+			end
+			rank[i] = rankName
+		end
+	end
+end
+
+f:RegisterEvent("ADDON_LOADED")
+f:SetScript("OnEvent", function(self, event, ...)
+	f[event](self, ...)
+end)
