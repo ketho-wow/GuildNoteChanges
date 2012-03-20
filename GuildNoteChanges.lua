@@ -2,13 +2,13 @@
 --- Author: Ketho (EU-Boulderfist)		---
 --- License: Public Domain				---
 --- Created: 2011.09.20					---
---- Version: 0.5 [2012.01.29]			---
+--- Version: 0.6 [2012.03.20]			---
 -------------------------------------------
 --- Curse			http://www.curse.com/addons/wow/guildnotechanges
 --- WoWInterface	http://www.wowinterface.com/downloads/info20322-GuildNoteChanges.html
 
 local NAME = ...
-local VERSION = 0.5
+local VERSION = 0.6
 
 local db, rank
 local viewOfficer, officerColor
@@ -35,8 +35,7 @@ end
 	--- Frame ---
 	-------------
 
-local delay, cd = 0, {0, 0}
-local noop = function() end
+local delay, cd = 0, {}
 
 local f = CreateFrame("Frame")
 
@@ -65,12 +64,12 @@ function f:OnUpdate(elapsed)
 			self:RegisterEvent("GUILD_ROSTER_UPDATE")
 			self:RegisterEvent("GUILD_RANKS_UPDATE")
 		end
-		self:SetScript("OnUpdate", noop)
+		self:SetScript("OnUpdate", nil)
 	end
 end
 
-function f:ADDON_LOADED(...)
-	if ... == NAME then
+function f:ADDON_LOADED(name)
+	if name == NAME then
 		GuildNoteChangesDB = GuildNoteChangesDB or {}
 		GuildNoteChangesDB.version = VERSION
 		self:UnregisterEvent("ADDON_LOADED")
@@ -79,7 +78,7 @@ function f:ADDON_LOADED(...)
 end
 
 function f:GUILD_ROSTER_UPDATE()
-	if time() > cd[1] then -- throttle
+	if time() > (cd[1] or 0) then -- throttle
 		cd[1] = time() + 5
 		for i = 1, GetNumGuildMembers() do
 			local name, _, _, _, _, _, publicNote, officerNote, _, _, class = GetGuildRosterInfo(i)
@@ -104,12 +103,12 @@ function f:GUILD_ROSTER_UPDATE()
 end
 
 function f:GUILD_RANKS_UPDATE()
-	if time() > cd[2] then
+	if time() > (cd[2] or 0) then
 		cd[2] = time() + 60
 		for i = 1, GuildControlGetNumRanks() do
 			local rankdb = rank[i]
 			local rankName = GuildControlGetRankName(i)
-			if rankdb and rankdb ~= rankName then
+			if rankdb and rankdb ~= rankName and rankName ~= "" then
 				print(format("|cff%s[%s]|r |cff71D5FF#%s|r %s |cff%s->|r %s", officerColor, GUILDCONTROL_GUILDRANKS, i, rankdb, officerColor, rankName))
 			end
 			rank[i] = rankName
