@@ -2,13 +2,13 @@
 --- Author: Ketho (EU-Boulderfist)		---
 --- License: Public Domain				---
 --- Created: 2011.09.20					---
---- Version: 0.7 [2012.03.21]			---
+--- Version: 0.8 [2012.03.22]			---
 -------------------------------------------
 --- Curse			http://www.curse.com/addons/wow/guildnotechanges
 --- WoWInterface	http://www.wowinterface.com/downloads/info20322-GuildNoteChanges.html
 
 local NAME = ...
-local VERSION = 0.7
+local VERSION = 0.8
 
 local db, rank
 local viewOfficer, officerColor
@@ -112,11 +112,11 @@ function f:GUILD_RANKS_UPDATE()
 		cd[2] = time() + 60
 		for i = 1, GuildControlGetNumRanks() do
 			local rankdb = rank[i]
-			local rankName = GuildControlGetRankName(i)
-			if rankdb and rankdb ~= rankName and rankName ~= "" then -- sanity check
-				print(format("|cff%s[%s]|r |cff71D5FF#%s|r %s |cff%s->|r %s", officerColor, GUILDCONTROL_GUILDRANKS, i, rankdb, officerColor, rankName))
+			local name = GuildControlGetRankName(i)
+			if rankdb and rankdb ~= name and rankdb ~= "" and name ~= "" then -- sanity checks
+				print(format("|cff%s[%s]|r |cff71D5FF#%s|r %s |cff%s->|r %s", officerColor, GUILDCONTROL_GUILDRANKS, i, rankdb, officerColor, name))
 			end
-			rank[i] = rankName
+			rank[i] = name
 		end
 	end
 end
