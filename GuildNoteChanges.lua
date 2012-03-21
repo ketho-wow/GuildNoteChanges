@@ -2,13 +2,13 @@
 --- Author: Ketho (EU-Boulderfist)		---
 --- License: Public Domain				---
 --- Created: 2011.09.20					---
---- Version: 0.6 [2012.03.20]			---
+--- Version: 0.7 [2012.03.21]			---
 -------------------------------------------
 --- Curse			http://www.curse.com/addons/wow/guildnotechanges
 --- WoWInterface	http://www.wowinterface.com/downloads/info20322-GuildNoteChanges.html
 
 local NAME = ...
-local VERSION = 0.6
+local VERSION = 0.7
 
 local db, rank
 local viewOfficer, officerColor
@@ -49,7 +49,13 @@ function f:OnUpdate(elapsed)
 			local guild = GetGuildInfo("player")
 			GuildNoteChangesDB[realm] = GuildNoteChangesDB[realm] or {}
 			GuildNoteChangesDB[realm][guild] = GuildNoteChangesDB[realm][guild] or {}
-			db = GuildNoteChangesDB[realm][guild]
+			db = setmetatable(GuildNoteChangesDB[realm][guild], {
+				__index = function(t, k)
+					local v = {}
+					rawset(t, k, v)
+					return v
+				end
+			})
 			db.rank = db.rank or {}
 			rank = db.rank
 			
@@ -83,7 +89,6 @@ function f:GUILD_ROSTER_UPDATE()
 		for i = 1, GetNumGuildMembers() do
 			local name, _, _, _, _, _, publicNote, officerNote, _, _, class = GetGuildRosterInfo(i)
 			if not name then return end -- sanity check
-			db[name] = db[name] or {}
 			local classColor = cache[class]
 			local publicdb, officerdb = db[name][1], db[name][2]
 			if publicdb and publicdb ~= publicNote then
@@ -108,7 +113,7 @@ function f:GUILD_RANKS_UPDATE()
 		for i = 1, GuildControlGetNumRanks() do
 			local rankdb = rank[i]
 			local rankName = GuildControlGetRankName(i)
-			if rankdb and rankdb ~= rankName and rankName ~= "" then
+			if rankdb and rankdb ~= rankName and rankName ~= "" then -- sanity check
 				print(format("|cff%s[%s]|r |cff71D5FF#%s|r %s |cff%s->|r %s", officerColor, GUILDCONTROL_GUILDRANKS, i, rankdb, officerColor, rankName))
 			end
 			rank[i] = rankName
