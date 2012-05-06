@@ -2,7 +2,7 @@
 --- Author: Ketho (EU-Boulderfist)		---
 --- License: Public Domain				---
 --- Created: 2011.09.20					---
---- Version: 0.8 [2012.03.22]			---
+--- Version: 0.9 [2012.05.06]			---
 -------------------------------------------
 --- Curse			http://www.curse.com/addons/wow/guildnotechanges
 --- WoWInterface	http://www.wowinterface.com/downloads/info20322-GuildNoteChanges.html
@@ -27,15 +27,12 @@ local cache = setmetatable({}, {__index = function(t, k)
 	return v
 end})
 
-local function RefreshColor()
-	wipe(cache)
-end
-
 	-------------
 	--- Frame ---
 	-------------
 
-local delay, cd = 0, {}
+local delay = 0
+local cd = {}
 
 local f = CreateFrame("Frame")
 
@@ -64,7 +61,9 @@ function f:OnUpdate(elapsed)
 			officerColor = format("%02X%02X%02X", officer.r*255, officer.g*255, officer.b*255)
 			
 			if CUSTOM_CLASS_COLORS then
-				CUSTOM_CLASS_COLORS:RegisterCallback(RefreshColor)
+				CUSTOM_CLASS_COLORS:RegisterCallback(function()
+					wipe(cache)
+				end)
 			end
 			
 			self:RegisterEvent("GUILD_ROSTER_UPDATE")
