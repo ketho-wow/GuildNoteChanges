@@ -2,13 +2,13 @@
 --- Author: Ketho (EU-Boulderfist)		---
 --- License: Public Domain				---
 --- Created: 2011.09.20					---
---- Version: 0.9 [2012.05.06]			---
+--- Version: 1.0 [2012.08.28]			---
 -------------------------------------------
 --- Curse			http://www.curse.com/addons/wow/guildnotechanges
 --- WoWInterface	http://www.wowinterface.com/downloads/info20322-GuildNoteChanges.html
 
 local NAME = ...
-local VERSION = 0.8
+local VERSION = "1.0"
 
 local db, rank
 local viewOfficer, officerColor
@@ -31,44 +31,45 @@ end})
 	--- Frame ---
 	-------------
 
-local delay = 0
 local cd = {}
 
 local f = CreateFrame("Frame")
 
--- delay initialization, because some guild API does not yet
+-- delay initialization because some guild API does not yet
 -- return the correct information (even after ADDON_LOADED)
+-- mostly requires 2 OnUpdates
 function f:OnUpdate(elapsed)
-	delay = delay + elapsed
-	if delay > 5 then
-		if IsInGuild() then
-			local realm = GetRealmName()
-			local guild = GetGuildInfo("player")
-			GuildNoteChangesDB[realm] = GuildNoteChangesDB[realm] or {}
-			GuildNoteChangesDB[realm][guild] = GuildNoteChangesDB[realm][guild] or {}
-			db = setmetatable(GuildNoteChangesDB[realm][guild], {
-				__index = function(t, k)
-					local v = {}
-					rawset(t, k, v)
-					return v
-				end
-			})
-			db.rank = db.rank or {}
-			rank = db.rank
-			
-			viewOfficer = CanViewOfficerNote()
-			local officer = ChatTypeInfo.OFFICER
-			officerColor = format("%02X%02X%02X", officer.r*255, officer.g*255, officer.b*255)
-			
-			if CUSTOM_CLASS_COLORS then
-				CUSTOM_CLASS_COLORS:RegisterCallback(function()
-					wipe(cache)
-				end)
+	if IsInGuild() then -- seems readily available
+		local realm = GetRealmName()
+		local guild = GetGuildInfo("player")
+		if not guild then return end
+		
+		GuildNoteChangesDB[realm] = GuildNoteChangesDB[realm] or {}
+		GuildNoteChangesDB[realm][guild] = GuildNoteChangesDB[realm][guild] or {}
+		db = setmetatable(GuildNoteChangesDB[realm][guild], {
+			__index = function(t, k)
+				local v = {}
+				rawset(t, k, v)
+				return v
 			end
-			
-			self:RegisterEvent("GUILD_ROSTER_UPDATE")
-			self:RegisterEvent("GUILD_RANKS_UPDATE")
+		})
+		db.rank = db.rank or {}
+		rank = db.rank
+		
+		viewOfficer = CanViewOfficerNote()
+		local officer = ChatTypeInfo.OFFICER
+		officerColor = format("%02X%02X%02X", officer.r*255, officer.g*255, officer.b*255)
+		
+		if CUSTOM_CLASS_COLORS then
+			CUSTOM_CLASS_COLORS:RegisterCallback(function()
+				wipe(cache)
+			end)
 		end
+		
+		self:RegisterEvent("GUILD_ROSTER_UPDATE")
+		self:RegisterEvent("GUILD_RANKS_UPDATE")
+		self:SetScript("OnUpdate", nil)
+	else
 		self:SetScript("OnUpdate", nil)
 	end
 end
