@@ -1,9 +1,8 @@
-## Interface: 50001
-## Version: 1.0
+## Interface: 50300
+## Version: 1.1
 ## Title: GuildNoteChanges
 ## Notes: Shows when a Guild Note changes
 ## Author: Ketho @ EU-Boulderfist
 ## SavedVariables: GuildNoteChangesDB
-## OptionalDeps: !ClassColors
 
 GuildNoteChanges.lua
