@@ -2,7 +2,7 @@
 --- Author: Ketho (EU-Boulderfist)		---
 --- License: Public Domain				---
 --- Created: 2011.09.20					---
---- Version: 1.1 [2013.05.23]			---
+--- Version: 1.2 [2014.11.10]			---
 -------------------------------------------
 --- Curse			http://www.curse.com/addons/wow/guildnotechanges
 --- WoWInterface	http://www.wowinterface.com/downloads/info20322-GuildNoteChanges.html
@@ -40,9 +40,9 @@ local f = CreateFrame("Frame")
 -- mostly requires 2 OnUpdates
 function f:OnUpdate(elapsed)
 	if IsInGuild() then -- seems readily available
-		local realm = GetRealmName()
-		local guild = GetGuildInfo("player")
+		local guild, _, _, realm = GetGuildInfo("player")
 		if not guild then return end
+		realm = realm or GetRealmName()
 		
 		GuildNoteChangesDB[realm] = GuildNoteChangesDB[realm] or {}
 		GuildNoteChangesDB[realm][guild] = GuildNoteChangesDB[realm][guild] or {}
