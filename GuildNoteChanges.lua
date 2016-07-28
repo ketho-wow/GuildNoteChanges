@@ -1,11 +1,5 @@
--------------------------------------------
---- Author: Ketho (EU-Boulderfist)		---
---- License: Public Domain				---
---- Created: 2011.09.20					---
---- Version: 1.2 [2014.11.10]			---
--------------------------------------------
---- Curse			http://www.curse.com/addons/wow/guildnotechanges
---- WoWInterface	http://www.wowinterface.com/downloads/info20322-GuildNoteChanges.html
+-- Author: Ketho (EU-Boulderfist)
+-- License: Public Domain
 
 local NAME = ...
 local VERSION = GetAddOnMetadata(NAME, "Version")

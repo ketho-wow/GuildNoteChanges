@@ -1,5 +1,5 @@
-## Interface: 60000
-## Version: 1.2
+## Interface: 70000
+## Version: 1.2.1
 ## Title: GuildNoteChanges
 ## Notes: Shows when a Guild Note changes
 ## Author: Ketho @ EU-Boulderfist
