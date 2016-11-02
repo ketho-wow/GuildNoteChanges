@@ -90,7 +90,7 @@ function f:GUILD_ROSTER_UPDATE()
 			if viewOfficer then
 				if officerdb and officerdb ~= officerNote then
 					local text = (officerdb == "") and officerNote or format("%s |cff%s->|r %s", officerdb, classColor,  (officerNote == "") and "|cffFF0000"..NONE.."|r" or officerNote)
-					print(format("|cff"..officerColor.."[%s]|r [%s]|r %s", OFFICER_NOTE_COLON, classColor, name, text))
+					print(format("|cff%s[%s]|r |cff%s[%s]|r %s", officerColor, OFFICER_NOTE_COLON, classColor, name, text))
 				end
 				db[name][2] = officerNote
 			end
