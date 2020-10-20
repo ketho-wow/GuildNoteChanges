@@ -10,6 +10,16 @@ local viewOfficer, officerColor
 local format = format
 local GetGuildRosterInfo = GetGuildRosterInfo
 
+local isClassic = (WOW_PROJECT_ID == WOW_PROJECT_CLASSIC)
+
+local function CanViewOfficerNoteCompat()
+	if isClassic then
+		return CanViewOfficerNote()
+	else
+		return C_GuildInfo.CanViewOfficerNote()
+	end
+end
+
 	---------------
 	--- Caching ---
 	---------------
@@ -50,7 +60,7 @@ function f:OnUpdate(elapsed)
 		db.rank = db.rank or {}
 		rank = db.rank
 		
-		viewOfficer = CanViewOfficerNote()
+		viewOfficer = CanViewOfficerNoteCompat()
 		local officer = ChatTypeInfo.OFFICER
 		officerColor = format("%02X%02X%02X", officer.r*255, officer.g*255, officer.b*255)
 		
